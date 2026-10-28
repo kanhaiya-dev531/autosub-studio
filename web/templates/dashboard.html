@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Your projects · AutoSub Studio{% endblock %}
+{% block content %}
+<div class="wrap page dash" id="dash" data-max-mb="{{ max_upload_mb }}">
+  <div class="dash-head">
+    <h1>Your projects</h1>
+    {% if stats.projects %}
+      <p class="muted">{{ stats.projects }} {{ 'project' if stats.projects == 1 else 'projects' }} · {{ stats.seconds|spoken_length }} of video</p>
+    {% endif %}
+  </div>
+
+  <section class="uploader" aria-labelledby="up-h">
+    <h2 id="up-h">New project</h2>
+    <div class="field field--inline">
+      <label for="language">Spoken language</label>
+      <select id="language">
+        {% for code, name in languages %}<option value="{{ code }}">{{ name }}</option>{% endfor %}
+      </select>
+    </div>
+    <label class="drop" id="drop" for="file">
+      <input type="file" id="file" class="drop-input" accept="video/*,.mkv,.mov,.avi">
+      <span class="drop-title" id="drop-title">Drop a video here, or choose a file</span>
+      <span class="drop-hint" id="drop-hint">MP4, MOV, MKV or WebM, up to {{ max_upload_mb }} MB{% if max_video_seconds %} and {{ (max_video_seconds / 60)|round|int }} minutes{% endif %}</span>
+      <span class="drop-bar" id="drop-bar" hidden><span id="drop-bar-fill"></span></span>
+    </label>
+    <p class="form-error" id="upload-error" role="alert" hidden></p>
+  </section>
+
+  <section aria-labelledby="proj-h">
+    <h2 id="proj-h">Recent projects</h2>
+    {% if jobs %}
+    <ul class="plist" id="plist">
+      {% for j in jobs %}
+      <li class="prow" data-id="{{ j.id }}" data-active="{{ 1 if j.active else 0 }}">
+        <div class="prow-main">
+          <a class="prow-title" href="{{ url_for('pages.project', job_id=j.id) }}">{{ j.title }}</a>
+          <span class="prow-meta">{{ j.duration_sec|duration }} · {{ (j.language|language_label) if j.language else 'Auto' }} · {{ j.cue_count }} lines · {{ j.created_at|nice_date }}</span>
+        </div>
+        <span class="chip chip--{{ j.status }}" data-role="status">{% if j.active %}Transcribing {{ j.progress }}%{% elif j.status == 'ready' %}Ready{% else %}Failed{% endif %}</span>
+        <button class="btn btn-quiet btn-sm" type="button" data-delete>Delete</button>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No projects yet. Drop a video above to make your first subtitles.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>{% endblock %}

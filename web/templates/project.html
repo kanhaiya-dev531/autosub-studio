@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} · AutoSub Studio{% endblock %}
+{% block body_class %}workspace-page{% endblock %}
+{% block content %}
+<div class="wrap-wide ws" id="workspace"
+     data-job-id="{{ job.id }}"
+     data-video-url="{{ url_for('pages.video', job_id=job.id) }}"
+     data-default-template="{{ default_template }}">
+
+  <div class="ws-head">
+    <div>
+      <a class="crumb" href="{{ url_for('pages.dashboard') }}">Projects</a>
+      <h1 class="ws-title">{{ job.title }}</h1>
+    </div>
+    <span class="chip" id="status-chip">Loading</span>
+  </div>
+
+  <!-- shown while the speech is being turned into text, or if that failed -->
+  <section class="status-panel" id="status-panel" aria-live="polite" hidden>
+    <p class="status-title" id="status-title">Preparing your video</p>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="status-bar"><span id="status-fill"></span></div>
+    <p class="muted" id="status-text"></p>
+    <p id="status-actions" hidden><a class="btn btn-primary" href="{{ url_for('pages.dashboard') }}">Upload another video</a></p>
+  </section>
+
+  <div class="ws-body" id="ws-body" hidden>
+    <section class="ws-left" aria-label="Preview and style">
+      <div class="player" id="player">
+        <video id="video" controls playsinline preload="metadata"></video>
+        <div class="cap cap--pop" id="live-caption" aria-hidden="true"></div>
+      </div>
+      <p class="note" id="video-note" hidden>The original video is no longer stored. Your subtitles are safe, but you need to upload the video again to preview styles or render.</p>
+      <p class="fine" id="live-note">The live caption approximates the final look. The thumbnails below are drawn by the real renderer.</p>
+
+      <fieldset class="tpl-set">
+        <legend>Caption style</legend>
+        <div class="tpl-grid">
+          {% for t in templates %}
+          <label class="tpl">
+            <input type="radio" name="template" value="{{ t.key }}" {% if t.key == default_template %}checked{% endif %}>
+            <span class="tpl-thumb"><img alt="" data-preview="{{ t.key }}" width="320" height="180"><span class="tpl-fallback">Preview not available</span></span>
+            <span class="tpl-name">{{ t.name }}</span>
+            <span class="tpl-desc">{{ t.tagline }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <div class="render" id="render">
+        <button class="btn btn-primary" type="button" id="render-btn">Render video</button>
+        <div class="bar" id="render-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><span id="render-fill"></span></div>
+        <p class="muted" id="render-text" aria-live="polite"></p>
+        <ul class="renders" id="renders"></ul>
+      </div>
+
+      <details class="sync" id="sync">
+        <summary>Fix the timing</summary>
+        <div class="sync-body">
+          <div class="sync-block">
+            <h3>Shift everything</h3>
+            <p class="muted">Positive moves the subtitles later, negative earlier.</p>
+            <div class="row">
+              <button class="btn btn-quiet btn-sm" type="button" data-nudge="-0.5">-0.5 s</button>
+              <button class="btn btn-quiet btn-sm" type="button" data-nudge="-0.1">-0.1 s</button>
+              <input id="shift-seconds" type="number" step="0.1" value="0" aria-label="Seconds to shift">
+              <button class="btn btn-quiet btn-sm" type="button" data-nudge="0.1">+0.1 s</button>
+              <button class="btn btn-quiet btn-sm" type="button" data-nudge="0.5">+0.5 s</button>
+              <button class="btn btn-primary btn-sm" type="button" id="shift-apply">Apply</button>
+            </div>
+          </div>
+          <div class="sync-block">
+            <h3>Fix drift</h3>
+            <p class="muted">Lines that slip further out of time suggest a frame-rate mismatch.</p>
+            <div class="row">
+              <select id="stretch-preset" aria-label="Frame-rate conversion">
+                <option value="">Custom factor</option>
+                <option value="1.042708">23.976 to 25 fps</option>
+                <option value="1.041667">24 to 25 fps</option>
+                <option value="0.959041">25 to 23.976 fps</option>
+                <option value="0.96">25 to 24 fps</option>
+              </select>
+              <input id="stretch-factor" type="number" step="0.0001" min="0.5" max="2" value="1" aria-label="Stretch factor">
+              <button class="btn btn-primary btn-sm" type="button" id="stretch-apply">Apply</button>
+            </div>
+          </div>
+          <div class="sync-block">
+            <h3>Match the speech</h3>
+            <p class="muted">Compares your lines with what was heard in the video and corrects shift and drift.</p>
+            <button class="btn btn-primary btn-sm" type="button" id="auto-apply">Match automatically</button>
+          </div>
+          <div class="sync-block">
+            <h3>Import an .srt file</h3>
+            <p class="muted">Replaces the current lines with the ones from your file.</p>
+            <div class="row">
+              <input id="srt-file" type="file" accept=".srt,text/plain" aria-label="Subtitle file">
+              <label class="check"><input id="srt-auto" type="checkbox" checked> Match timing to the speech</label>
+              <button class="btn btn-primary btn-sm" type="button" id="srt-apply">Import</button>
+            </div>
+          </div>
+          <p class="sync-result" id="sync-result" role="status" aria-live="polite"></p>
+        </div>
+      </details>
+    </section>
+
+    <section class="ws-right" aria-label="Subtitle lines">
+      <div class="cues-head">
+        <h2>Subtitles <span class="muted" id="cue-count"></span></h2>
+        <span class="save-state" id="save-state" role="status" aria-live="polite"></span>
+      </div>
+      <div class="downloads" aria-label="Download subtitles">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('pages.download', job_id=job.id, kind='srt') }}">Download .srt</a>
+        <a class="btn btn-quiet btn-sm" href="{{ url_for('pages.download', job_id=job.id, kind='vtt') }}">.vtt</a>
+        <a class="btn btn-quiet btn-sm" href="{{ url_for('pages.download', job_id=job.id, kind='txt') }}">.txt</a>
+        <a class="btn btn-quiet btn-sm" id="download-ass" href="{{ url_for('pages.download', job_id=job.id, kind='ass', template=default_template) }}" data-base="{{ url_for('pages.download', job_id=job.id, kind='ass') }}">.ass</a>
+      </div>
+      <div class="cue-list" id="cue-list" role="list"></div>
+      <p class="empty" id="cue-empty" hidden>No subtitle lines yet. Add a line or import an .srt file.</p>
+      <button class="btn btn-quiet" type="button" id="add-line">Add a line</button>
+    </section>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/workspace.js') }}" defer></script>{% endblock %}

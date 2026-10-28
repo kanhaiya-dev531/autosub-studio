@@ -1,0 +1,33 @@
+[project]
+name = "autosub-studio"
+version = "1.0.0"
+description = "Auto subtitle generator: video to SRT with styled caption templates. Website + desktop app."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = ["data", "node_modules"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",    # long lines are fine when a formatter is not enforced
+    "SIM905",  # "a b c".split() is clearer than a list literal in tests
+    "RUF046",  # int(round(...)) on values that are already integers is harmless
+    "RUF057",
+    "RUF001",  # full-width CJK punctuation in the sentence-splitter is intentional
+    "B905",    # zip() over equal-length lists
+    "C408",    # dict(a=1) is fine
+    "RUF005",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = true

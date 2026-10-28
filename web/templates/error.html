@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ status }} · AutoSub Studio{% endblock %}
+{% block content %}
+<div class="wrap narrow page">
+  <h1>{{ message }}</h1>
+  <p class="muted">Error {{ status }}</p>
+  <p><a class="btn btn-primary" href="{{ url_for('pages.dashboard') }}">Go to your projects</a></p>
+</div>
+{% endblock %}

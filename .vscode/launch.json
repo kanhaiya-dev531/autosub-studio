@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Website (http://127.0.0.1:5000)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_web.py",
+      "console": "integratedTerminal",
+      "env": { "FLASK_DEBUG": "1" },
+      "justMyCode": true
+    },
+    {
+      "name": "Desktop app",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_desktop.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Check my setup (doctor)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/doctor.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Create database tables",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/init_db.py",
+      "console": "integratedTerminal"
+    }
+  ]
+}

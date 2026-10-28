@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}AutoSub Studio: subtitles for any video{% endblock %}
+{% block body_class %}home{% endblock %}
+{% block content %}
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>Turn any video into subtitles</h1>
+      <p class="lead">Upload a clip and get an .srt file plus captions burned into the video, in three styles. Free, with no watermark.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('pages.dashboard') }}">Upload a video</a>
+        <a class="btn btn-quiet btn-lg" href="#styles">See the styles</a>
+      </div>
+      <p class="fine">Hindi, English and {{ languages|length - 3 }} other languages. MP4, MOV, MKV or WebM up to {{ max_upload_mb }} MB.</p>
+    </div>
+
+    <figure class="hero-stage" aria-label="Live example of the three caption styles">
+      <div class="stage" id="demo-stage">
+        <span class="stage-time" id="demo-time" aria-hidden="true">00:00:00.000</span>
+        <div class="cap cap--pop" id="demo-caption" aria-hidden="true"></div>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Caption style">
+        {% for t in templates %}
+        <button type="button" role="radio" aria-checked="{{ 'true' if t.key == 'pop' else 'false' }}" data-template="{{ t.key }}">{{ t.name }}</button>
+        {% endfor %}
+      </div>
+      <figcaption class="sr-only">Example caption: Your words appear on screen exactly when you say them.</figcaption>
+    </figure>
+  </section>
+
+  <section class="steps" aria-labelledby="how-h">
+    <h2 id="how-h" class="sr-only">How it works</h2>
+    <ol>
+      <li><h3>Upload</h3><p>Drop in a video. The speech is turned into text, and every word gets its own start and end time.</p></li>
+      <li><h3>Review and fix</h3><p>Edit any line, split or merge lines, or nudge the timing. Already have an .srt? Import it and match it to the audio.</p></li>
+      <li><h3>Pick a style and export</h3><p>Download the .srt, or render a video with the captions burned in. Nothing is added to your picture.</p></li>
+    </ol>
+  </section>
+
+  <section class="styles" id="styles" aria-labelledby="styles-h">
+    <h2 id="styles-h">Three caption styles</h2>
+    <p class="muted measure">Every style is drawn by the same engine that renders your final video, so what you preview is what you get.</p>
+    <div class="style-grid">
+      {% for t in templates %}
+      <figure>
+        <img src="{{ url_for('static', filename='img/style-' ~ t.key ~ '.jpg') }}" alt="{{ t.name }} style: {{ t.tagline }}" width="640" height="360" loading="lazy">
+        <figcaption><strong>{{ t.name }}</strong> {{ t.tagline }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

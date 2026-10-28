@@ -1,0 +1,51 @@
+# The whole stack on your computer: MySQL 8 + the website.
+#   docker compose up --build        then open http://localhost:5000
+# Settings come from your .env file (see .env.example); the database settings below are set for you.
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-autosub-dev-password}
+      MYSQL_DATABASE: autosub
+    ports:
+      - "127.0.0.1:3306:3306"   # so MySQL Workbench or the VS Code MySQL extension can look inside
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  web:
+    build:
+      context: .
+      args:
+        REQUIREMENTS: requirements.txt    # includes the local Whisper engine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-autosub-dev-password}
+      DB_NAME: autosub
+      TRANSCRIBER: ${TRANSCRIBER:-local}
+      WHISPER_MODEL: ${WHISPER_MODEL:-small}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      SECRET_KEY: ${SECRET_KEY:-}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-200}
+    ports:
+      - "5000:10000"
+    volumes:
+      - appdata:/data
+      - modelcache:/home/app/.cache     # the Whisper model is downloaded once and kept
+
+volumes:
+  dbdata:
+  appdata:
+  modelcache:

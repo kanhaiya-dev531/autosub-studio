@@ -1,0 +1,8 @@
+# The website only, for hosting. No local speech model (TRANSCRIBER=groq), so the image stays small.
+Flask>=3.0,<4
+PyMySQL>=1.1,<2
+cryptography>=42
+certifi>=2024.2.2
+requests>=2.31
+python-dotenv>=1.0
+gunicorn>=22.0

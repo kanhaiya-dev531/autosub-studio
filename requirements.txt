@@ -1,0 +1,12 @@
+# Everything for running on your own computer (website + desktop app + local speech recognition).
+# Install:  pip install -r requirements.txt
+Flask>=3.0,<4
+PyMySQL>=1.1,<2
+cryptography>=42        # PyMySQL needs it to log in to MySQL 8 / TiDB Cloud / Aiven
+certifi>=2024.2.2       # trusted certificates for the encrypted (TLS) database connection
+requests>=2.31          # talks to Groq when TRANSCRIBER=groq
+python-dotenv>=1.0      # reads the .env file
+Pillow>=10.2            # preview pictures in the desktop app
+faster-whisper>=1.0.3   # speech recognition that runs on your computer (TRANSCRIBER=local)
+av>=14,<17              # audio decoder used by faster-whisper; PyAV 17+ breaks it ("metadata_errors" TypeError)
+gunicorn>=22.0; sys_platform != "win32"   # production web server (Linux/macOS, used by Docker)

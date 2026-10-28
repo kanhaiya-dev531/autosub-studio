@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Lint, types and tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install Python packages
+        run: pip install -r requirements-cloud.txt Pillow pytest ruff mypy
+      - run: ruff check .
+      - run: mypy desktop autosub web scripts
+      - run: pytest
+
+  mysql:
+    name: Tests against a real MySQL 8
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: autosub_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_USER: root
+      TEST_DB_PASSWORD: root
+      TEST_DB_NAME: autosub_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install -r requirements-cloud.txt pytest
+      - name: Database tests and the whole upload-to-render flow on MySQL
+        run: pytest tests/test_backends.py -v
+
+  docker:
+    name: The Docker image builds and answers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t autosub .
+      - name: Start it with the mock engine and call /healthz
+        run: |
+          docker run -d --name app -p 10000:10000 -e TRANSCRIBER=mock autosub
+          for i in $(seq 1 30); do
+            curl -fs http://127.0.0.1:10000/healthz && exit 0
+            sleep 2
+          done
+          docker logs app
+          exit 1

@@ -1,0 +1,46 @@
+# Render "Blueprint": describes the free web service. In the Render dashboard choose
+# New > Blueprint and select your GitHub repository. Values marked sync: false are asked for once.
+# The database is NOT created here: use a free MySQL from TiDB Cloud or Aiven (see docs/DEPLOY.md).
+services:
+  - type: web
+    name: autosub-studio
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      # speech recognition: hosted Whisper by Groq (the free web server is too small to run a model)
+      - key: TRANSCRIBER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      # database: your free cloud MySQL
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"          # TiDB Cloud uses 4000: change it if your provider says so
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      # web
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      # keep the free server from being overloaded and the disk from filling up
+      - key: MAX_UPLOAD_MB
+        value: "100"
+      - key: MAX_VIDEO_SECONDS
+        value: "240"
+      - key: RENDER_MAX_HEIGHT
+        value: "480"
+      - key: JOB_TTL_HOURS
+        value: "24"
+      - key: WORKERS
+        value: "1"

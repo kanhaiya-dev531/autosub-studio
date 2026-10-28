@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AutoSub Studio{% endblock %}</title>
+  <meta name="description" content="Turn any video into subtitles. Get an .srt file and captions burned into the video in three styles.">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314142B'/%3E%3Crect x='5' y='19' width='22' height='7' rx='2' fill='%23FFD21F'/%3E%3Crect x='5' y='8' width='13' height='7' rx='2' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap site-header-row">
+      <a class="logo" href="{{ url_for('pages.index') }}" aria-label="AutoSub Studio home">Auto<span class="mark">Sub</span> Studio</a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="{{ url_for('pages.dashboard') }}">Projects</a>
+        {% if current_user and not current_user.is_guest %}
+          <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="linklike" type="submit">Sign out {{ current_user.display_name.split(' ')[0] }}</button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">Sign in</a>
+        {% endif %}
+        <a class="btn btn-primary btn-sm" href="{{ url_for('pages.dashboard') }}">New project</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">{% block content %}{% endblock %}</main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Built with Python, Flask, MySQL, FFmpeg and Whisper.</p>
+      <p class="muted">Videos you upload are used only to make your subtitles.
+        {%- if transcriber == 'groq' %} Their audio is sent to Groq for speech recognition.{% endif %}
+        {%- if job_ttl_hours %} Projects are deleted automatically after {{ job_ttl_hours }} hours.{% endif %}</p>
+    </div>
+  </footer>
+  <script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
