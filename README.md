@@ -61,7 +61,7 @@ python run_desktop.py               # desktop app
 
 In VS Code you can also press **F5** and choose *Website*, *Desktop app* or *Check my setup* (`.vscode/launch.json`). Select the `.venv` interpreter when VS Code asks.
 
-The first transcription downloads the Whisper `base` model (about 150 MB) and needs internet once. After that it works offline.
+The first transcription downloads the Whisper `small` model (about 480 MB) and needs internet once. After that it works offline.
 
 macOS / Linux: `python3 -m venv .venv && source .venv/bin/activate`, `brew install ffmpeg` or `sudo apt install ffmpeg`, and for the desktop app `sudo apt install python3-tk`.
 
